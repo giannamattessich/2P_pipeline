@@ -465,8 +465,7 @@ def categorical_to_2p(frame_times, state_values, state_times):
     )
     return vals[nearer]
 
-
-def make_aligned_frame_df(frame_times, state_df):
+def make_aligned_motion_frame_df(frame_times, state_df):
     motion_2p = motion_to_2p_bins(frame_times, state_df['motion'], state_df['time'])
     state_2p = categorical_to_2p(frame_times, state_df['state'], state_df['time'])
     aligned_df = pd.DataFrame({
@@ -502,101 +501,3 @@ def bin_spikes(spike_times, t_lfp):
 def resample_to_grid(x_times, x_values, new_times):
     # assumes x_times are sorted and cover new_times range
     return np.interp(new_times, x_times, x_values)
-# def match_column_by_nearest_time(
-#     camera_times,
-#     frame_df,
-#     time_col: str,
-#     value_col: str,
-#     method: str = "nearest",      # "nearest" | "backward" | "forward"
-#     tolerance=None,               # None, float seconds, or pd.Timedelta
-#     dedup: str = "last",          # how to resolve duplicate times in frame_df: "last"|"first"|None
-#     return_indices: bool = False  # also return the chosen row indices into frame_df (after sort/dedup)
-# ):
-#     """
-#     Map each camera time to a value from frame_df[value_col] chosen by temporal proximity.
-
-#     Parameters
-#     ----------
-#     camera_times : array-like of timestamps (float seconds or datetime-like)
-#     frame_df     : DataFrame with at least [time_col, value_col]
-#     time_col     : name of the time column in frame_df
-#     value_col    : name of the value column to sample from frame_df
-#     method       : "nearest" (default), "backward" (last <= t), or "forward" (first >= t)
-#     tolerance    : optional max time gap allowed (float seconds or pd.Timedelta).
-#                    If provided and the nearest/selected sample is farther than tolerance,
-#                    the output will be set to None for that camera time.
-#     dedup        : drop duplicate frame times keeping the "last" or "first" before matching.
-#     return_indices : if True, also return the integer indices (into the sorted/deduped view).
-
-#     Returns
-#     -------
-#     values : np.ndarray of length len(camera_times)
-#     (indices) : optional np.ndarray of chosen indices into the sorted/deduped frame_df view
-#     """
-#     if time_col not in frame_df or value_col not in frame_df:
-#         raise KeyError("time_col or value_col not found in frame_df")
-
-#     # Prepare source times/values (sorted, optional de-dup)
-#     src = frame_df[[time_col, value_col]].copy()
-#     src = src.sort_values(time_col, kind="mergesort")  # stable sort
-#     if dedup in ("first", "last"):
-#         src = src.drop_duplicates(subset=time_col, keep=dedup)
-
-#     # Convert times to a common numeric axis (seconds) while supporting datetimes
-#     def _to_seconds(a):
-#         s = pd.Series(a)
-#         if pd.api.types.is_datetime64_any_dtype(s):
-#             return pd.to_datetime(s).view("int64") / 1e9  # ns -> s
-#         return s.astype(float).to_numpy()
-
-#     t_src = _to_seconds(src[time_col].to_numpy())
-#     v_src = src[value_col].to_numpy()
-#     t_cam = _to_seconds(camera_times)
-
-#     if len(t_src) == 0:
-#         raise ValueError("frame_df has no rows after optional dedup.")
-#     n = len(t_src)
-
-#     # Optional tolerance (seconds)
-#     if tolerance is None:
-#         tol_sec = None
-#     elif isinstance(tolerance, pd.Timedelta):
-#         tol_sec = tolerance.total_seconds()
-#     else:
-#         tol_sec = float(tolerance)
-
-#     # Vectorized index selection
-#     idx = np.searchsorted(t_src, t_cam, side="left")
-
-#     if method == "backward":
-#         pick = np.clip(idx - 1, 0, n - 1)
-#     elif method == "forward":
-#         pick = np.clip(idx, 0, n - 1)
-#     elif method == "nearest":
-#         left = np.clip(idx - 1, 0, n - 1)
-#         right = np.clip(idx, 0, n - 1)
-#         # choose nearer; on ties, prefer left (earlier)
-#         choose_right = np.abs(t_src[right] - t_cam) < np.abs(t_src[left] - t_cam)
-#         pick = left.copy()
-#         pick[choose_right] = right[choose_right]
-#     else:
-#         raise ValueError("method must be 'nearest', 'backward', or 'forward'")
-
-#     # Apply tolerance if requested
-#     if tol_sec is not None:
-#         dt = np.abs(t_src[pick] - t_cam)
-#         invalid = dt > tol_sec
-#     else:
-#         invalid = np.zeros_like(pick, dtype=bool)
-
-#     # Build output (preserve dtype if possible; fall back to object when mixing None)
-#     out = v_src[pick].copy()
-#     if invalid.any():
-#         # ensure we can place None without error
-#         if out.dtype.kind in "fiu":  # numeric -> promote to object to hold None
-#             out = out.astype(object)
-#         out[invalid] = None
-
-#     if return_indices:
-#         return out, pick
-#     return out

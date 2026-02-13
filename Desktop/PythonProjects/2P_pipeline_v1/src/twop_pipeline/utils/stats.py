@@ -41,6 +41,10 @@ def cross_correlation(a, b, fs_hz, max_lag_s=10, axis=1):
     keep = np.abs(lags) <= max_lag_s
     return lags[keep], xcorr_full[keep]
 
+def clip_percentiles(x, pmin=0.1, pmax=99.9):
+    lo, hi = np.percentile(x, [pmin, pmax])
+    return np.clip(x, lo, hi)
+
 def zscore_robust(value_arr, axis=1):
     """
     Compute robust z-scores using the median and MAD (median absolute deviation).

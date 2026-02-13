@@ -1,5 +1,5 @@
 import os, traceback, numpy as np
-from twop_pipeline.utils.getDataFiles import get2p_foldername_field
+from twop_pipeline.utils.getDataFiles import find_s2p_datapath, get2p_foldername_field
 from twop_pipeline.utils.getFPS import scope_fs_from_xml
 
 class Suite2POutput:
@@ -42,15 +42,3 @@ class Suite2POutput:
         except Exception:
             traceback.print_exc()
 
-def find_s2p_datapath(suite2p_path):
-    # # if basepath accidentally provided, try checking if suite2p folder exists within
-    # # provided suite2p_path
-    if not suite2p_path.endswith('suite2p') or not os.path.exists(suite2p_path):
-        poss_paths = [os.path.join(suite2p_path, 'suite2p'),
-                        get2p_foldername_field(suite2p_path)]
-        for poss_path in poss_paths:
-            if poss_path is not None:
-                if os.path.exists(poss_path):
-                    suite2p_path = poss_path
-    print(f'Found Suite2P Path {suite2p_path}!')
-    return suite2p_path

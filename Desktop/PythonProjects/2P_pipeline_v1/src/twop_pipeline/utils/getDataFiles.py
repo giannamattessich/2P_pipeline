@@ -2,7 +2,6 @@ import os, traceback, shutil
 import numpy as np
 import pickle, joblib
 
-
 '''
 Generic function to load .pkl file into memory
 
@@ -74,6 +73,18 @@ def copy_neuroscope_xml(source_xml, rec_dirnames):
 #     del_files = [os.path.join(path, f'{os.path.basename(path)}.xml') for path in datapaths if not path.endswith('p9')]
 #     for file in del_files:
 #         os.remove(file)
+def find_s2p_datapath(suite2p_path):
+    # # if basepath accidentally provided, try checking if suite2p folder exists within
+    # # provided suite2p_path
+    if not suite2p_path.endswith('suite2p') or not os.path.exists(suite2p_path):
+        poss_paths = [os.path.join(suite2p_path, 'suite2p'),
+                        get2p_foldername_field(suite2p_path)]
+        for poss_path in poss_paths:
+            if poss_path is not None:
+                if os.path.exists(poss_path):
+                    suite2p_path = poss_path
+    print(f'Found Suite2P Path {suite2p_path}!')
+    return suite2p_path
 
 def get2p_foldername_field(data_basepath):
     """ 

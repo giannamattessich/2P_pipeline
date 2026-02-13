@@ -20,8 +20,7 @@ class FacemapOutput:
         except:
             traceback.print_exc()
             raise ValueError('Could not load facemap data')
-
-
+        
 def get_facemap_data(data_basepath):
     """
     HELPER FUNCTION TO INPUT DATA BASEPATH OF WHERE FACEMAP OUTPUT IS STORED,
